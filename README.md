@@ -6,7 +6,9 @@ of the garbage-free Multi-Array Queue (presented in 2024 in [Multi-Array Queue](
 The 128-bit CAS instruction enables Comparing-And-Swapping of a 64-bit value/payload (typically a 64-bit pointer) **together**
 with other 64 bits of necessary metadata (especially the round number to prevent ABA) in **one** atomic instruction.
 
-This work has been inspired by the [Michael & Scott Queue](https://www.cs.rochester.edu/~scott/papers/1996_PODC_queues.pdf).
+This work has been inspired by the [Michael & Scott Queue](https://www.cs.rochester.edu/~scott/papers/1996_PODC_queues.pdf)
+in the sense that the linearization operation is the writing the payload to the array and moving the writer position forward
+can be helped by other threads.
 
 <img src="https://MultiArrayQueue.github.io/Diagram_LockFreeMultiArrayQueue.png" height="600">
 
