@@ -97,7 +97,7 @@ typedef array {
 // the rings array
 array rings[1 + CNT_ALLOWED_EXTENSIONS];
 
-// this models the allocation of the rings array in the real program (in Promela arrays can only be statically allocated)
+// this models the allocation of the rings array (in Promela arrays can only be statically allocated)
 short ringsAllocMemory[1 + CNT_ALLOWED_EXTENSIONS] = 0;
 
 // one element of the diversions array
@@ -241,7 +241,7 @@ enqueue_read_element :
             //
             // A) Our copy of the writer position is "now" still the same as in memory.
             //    But then we have the correct elementDivertToRix, because we must have read the already linearized element
-            //    including the eventual new diversion (which is in elementDivertToRix).
+            //    (remember: transient state) including the eventual new diversion (which is in elementDivertToRix).
             //
             // B) Our copy of the writer position is "now" outdated: Then our writer position CAS will fail.
             //    In the extension helping we will either help if we already "know" a non-zero elementDivertToRix
@@ -341,8 +341,8 @@ enqueue_check_if_new_diversion :
                 // (or lagging even more) we would not get to here (and to the following element CAS).
                 // The element CAS succeeds (and so our result divertToRixNew becomes effective) only if the writer
                 // has not yet moved from the stationary state that we have read. But in such case the reader can only be
-                // in the previous round strictly ahead of us (because the same place would have triggered "Queue is full"),
-                // or in the same round behind us (or on the same place).
+                // in the previous round strictly ahead of the writer (because the same place would have triggered "Queue is full"),
+                // or in the same round behind the writer (or on the same place).
                 //
                 // note 2: In the empty state it could happen that the reader gets ahead of the writer,
                 // but only if the writer is transient, which is precluded by note 1.
@@ -369,17 +369,18 @@ enqueue_check_if_new_diversion :
                 //
                 // is it possible that the divertToRix is already there but the new ring is not yet allocated
                 // (i.e. the extension helping is not yet finished)? Answer yes: this is possible.
-                // But if this happens, then there was a linearization on a different *) element than on our
-                // copy of the writer in the stationary state, so our element CAS will fail, so we can stop here.
+                // But if this happens, then there must have been a linearization on a different *) element than on our
+                // copy of the writer in the stationary state, which means that there must also have been a linearization
+                // on our copy of the writer position before, so our element CAS will fail, so we can stop here.
                 // (actually we must stop here to avoid dereferencing a null pointer.)
                 //
                 // *) (in extreme case of rings[0][0] also possibly the same element)
                 //
                 // The reading of the element's divertToRix for going over the diversion(s) forward
-                // and the testing of ringsAllocMemory is the reason why this is modeled as a separate d_step.
+                // and the testing of ringsAllocMemory is the reason why this is modeled as a separate atomic step.
                 // Note that this going forward and testing occurs in the same temporal order as the items
                 // are laid, so no interleaves can affect the result more than the temporal position
-                // of this whole d_step as such: no need for even more TLWACCHes.
+                // of this whole atomic step as such: no need for even more TLWACCHes.
 
                 testNextWriterRix = rings[testNextWriterRix].elements[testNextWriterIx].divertToRix;
                 testNextWriterIx = 0;
@@ -415,13 +416,13 @@ enqueue_check_if_new_diversion_yes :
     atomic
     {
         // the search is bottom-up and the allocations are also bottom-up, so no interleaves within the search
-        // can affect the result more than the temporal position of this whole d_step as such: no need for several TLWACCHes
+        // can affect the result more than the temporal position of this whole atomic step as such: no need for several TLWACCHes
         //
         // performance: this is a linear search over a very short rings array that is frequently accessed (i.e. is in cache)
         // done only when the Queue considers extending (which might however be frequent in a nearly-full state).
         // Alternative: maintain a separate variable ringsMaxIndex (at the cost of extra CAS).
         //
-        // Theoretically this whole d_step could be conditional on "Queue not yet fully extended",
+        // Theoretically this whole atomic step could be conditional on "Queue not yet fully extended",
         // which translates to (0 == ringsAllocMemory[CNT_ALLOWED_EXTENSIONS]), but this would add
         // an extra memory read in the mainstream case.
 
@@ -1143,7 +1144,7 @@ In practical terms, linearizability condenses to establishing linearization poin
 at which the operations instantaneously take effect.
 
 The idea is that by ordering the concurrently running operations by their linearization points, one obtains
-a linear (i.e. sequential / single-threaded) execution history of that operations that give the same results.
+a linear (i.e. sequential / single-threaded) execution history of that operations that gives the same results.
 
 It is advantageous to prove linearizability theoretically via the linearization points,
 not only because it provides insights, but also because testing it experimentally may be intractable:

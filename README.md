@@ -7,7 +7,7 @@ The 128-bit CAS instruction enables Comparing-And-Swapping of a 64-bit value/pay
 with other 64 bits of necessary metadata (especially the round number to prevent ABA) in **one** atomic instruction.
 
 This work has been inspired by the [Michael & Scott Queue](https://www.cs.rochester.edu/~scott/papers/1996_PODC_queues.pdf)
-in the sense that the linearization operation is the writing the payload to the array and moving the writer position forward
+in the sense that the linearization operation is the writing of the payload to the array, and moving the writer position forward
 can be helped by other threads. For dequeueing, moving the reader position forward is itself the linearization operation.
 
 <img src="https://MultiArrayQueue.github.io/Diagram_LockFreeMultiArrayQueue.png" height="600">
@@ -25,7 +25,7 @@ In long: The algorithms have first been designed and verified as a model for the
 (for computer-aided simulations and exhaustive verifications). The Spin model file is the primary source of information
 and comments on the algorithms as such.
 
-After that the [JavaScript Simulator](https://MultiArrayQueue.github.io/Simulator_LockFreeMultiArrayQueue.html)
+After that, the [JavaScript Simulator](https://MultiArrayQueue.github.io/Simulator_LockFreeMultiArrayQueue.html)
 has been developed (for teaching and visual/manual simulations and verifications).
 
 As for a "real" implementation:
@@ -47,7 +47,7 @@ The extension operations, however, cannot in principle be made both lock-free an
 Lock-free means that more than one writer thread can consider extending the Queue.
 Each of these competing threads then prepares (allocates) memory for the new ring and tries to CAS it into the **rings** array.
 The memory of the winning thread goes into use, but the losing threads have to free the allocated memory again.
-In other words: A strict garbage-freedom has to be sacrificed in this case.
+In other words: A strict garbage-freedom has to be sacrificed in this case (in the sense that superfluous calloc-free pairs may occur).
 
 Other differences and optimizations over the original [Multi-Array Queues](https://github.com/MultiArrayQueue/MultiArrayQueue) exist:
 
@@ -65,7 +65,7 @@ Another difference from the original Multi-Array Queues is that the writer/reade
 
 ## Performance
 
-Performance-wise, this Queue is lagging by circa 40% behind the other Multi-Array Queues.
+Performance-wise, this Queue is lagging by circa 40% behind the [Java Queues](https://github.com/MultiArrayQueue/MultiArrayQueue).
 This is somehow consistent with other sources on the Internet that report that CMPXCHG16B
 (as a "heavier" instruction) is slower than CMPXCHG8B by around the same factor.
 
@@ -74,7 +74,7 @@ The performance-limiting factors of this Queue are not the algorithms themselves
 but the cache coherence traffic on the memory hotspots (especially the writer and reader positions)
 and the CMPXCHG16B instruction itself.
 
-Attempts to overcome this (e.g. via partitioning of the Queue to sub-Queues) could lead to loss of linearizability
+Attempts to overcome this (e.g. via partitioning of the Queue to sub-Queues) could lead to loss of linearizability,
 and it would also distract from the basic ideas (plus inflate the program codes away from their current (hopefully) minimality,
 thus causing headaches for reviews, verifications, etc.).
 
