@@ -52,7 +52,8 @@ std::atomic_uint64_t perfCounter;  // atomic counter of dequeue/enqueue pairs (b
  */
 void performanceTestTask(int threadNo, int64_t stopThreadsMillis)
 {
-    try {
+    try
+    {
         PerformanceTestMessage* message;
         uint64_t ownIterations = 0;
 
@@ -92,7 +93,7 @@ void performanceTestTask(int threadNo, int64_t stopThreadsMillis)
 }
 
 /*
- * Main class
+ * Main function
  */
 int main(int argc, char *argv[])
 {
