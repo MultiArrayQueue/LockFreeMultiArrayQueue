@@ -82,10 +82,11 @@ short cntDequeueEmpty = 0;
 
 // one array element
 // 6 bit divertToRix + 1 bit + 57 bit round + 64 bit value = 128 bit (to be CASed with CMPXCHG16B)
+// (note: these bit-layouts are for the real implementation, not for this Promela model)
 typedef element {
     short value = 0;  // the actual payload
-    short round = 0;  // to prevent the ABA problem
-    bool dirty = false;  // to skip the "round minus one" test in freshly allocated (clean) elements
+    short round = 0;  // round number to prevent the ABA problem
+    bool dirty = false;  // false: element is in fresh state (after the ring allocation), true: written at least once
     byte divertToRix = 0;  // to which ring to divert after this element (0 == do not divert)
 }
 
@@ -97,7 +98,7 @@ typedef array {
 // the rings array
 array rings[1 + CNT_ALLOWED_EXTENSIONS];
 
-// this models the allocation of the rings array (in Promela arrays can only be statically allocated)
+// this models the allocations of the rings in the rings array (needed because arrays can only be statically allocated in Promela)
 short ringsAllocMemory[1 + CNT_ALLOWED_EXTENSIONS] = 0;
 
 // one element of the diversions array

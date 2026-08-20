@@ -82,6 +82,12 @@ Besides the raw performance, the latency distribution is an important factor too
 What is known about lock-free (but not wait-free) algorithms is that under high contention they have a theoretically infinite tail
 in the latency distribution (i.e. the linearization CAS may fail an unlimited number of times for any given thread).
 
+In the single-writer and/or single-reader cases, however, the Queue is wait-free on the respective end, i.e. the enqueues and/or dequeues
+finish in bounded number of steps - except when the Queue extends and allocates new memory (which cannot be made wait-free).
+
+For wait-freedom in the multiple-writer and/or multiple-reader cases, see the
+[Wait-Free Multi-Array Queue](https://github.com/MultiArrayQueue/WaitFreeMultiArrayQueue).
+
 ## Development status
 
  * Currently (2026), this code is only for academic interest, not for production use.
