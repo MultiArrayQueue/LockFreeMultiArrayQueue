@@ -63,7 +63,7 @@ the Lock-Free Queue now uses the "divert to new ring after this element" semanti
 Another difference from the original Multi-Array Queues is that the writer/reader positions now point to
 "next to enqueue/next to dequeue" elements (instead of originally "last enqueued/last dequeued" elements).
 
-## Performance
+## Performance and Latency Distribution
 
 Performance-wise, this Queue is lagging by circa 40% behind the [Java Queues](https://github.com/MultiArrayQueue/MultiArrayQueue).
 This is somehow consistent with other sources on the Internet that report that CMPXCHG16B
@@ -87,6 +87,18 @@ finish in bounded number of steps - except when the Queue extends and allocates 
 
 For wait-freedom in the multiple-writer and/or multiple-reader cases, see the
 [Wait-Free Multi-Array Queue](https://github.com/MultiArrayQueue/WaitFreeMultiArrayQueue).
+
+## Memory Reclamation
+
+The Multi-Array Queues avoid Memory Reclamation and its complexities by not doing it at all.
+Instead, a memory that is once allocated is re-used ad infinitum.
+New memory allocations occur **only** if new data needs to be enqueued and the currently allocated memory
+does not suffice to hold all enqueued elements.
+
+The once allocated capacity never decreases. Admittedly, in theory, this appears not so attractive
+(e.g., a one-time burst of data might inflate the Queue and the Queue never "deflates back").
+However, does this translate into a real issue in practice?
+Experience with some related cases says no, but this needs to be evaluated per use case.
 
 ## Development status
 
